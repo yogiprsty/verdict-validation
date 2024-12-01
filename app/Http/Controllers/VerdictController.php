@@ -16,9 +16,11 @@ class VerdictController extends Controller
         $this->fileService = $fileService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $verdicts = Verdict::all();
+        $verdicts = Verdict::paginate(10);
+
+        // Return the paginated data to the view
         return view('verdicts.index', compact('verdicts'));
     }
 
