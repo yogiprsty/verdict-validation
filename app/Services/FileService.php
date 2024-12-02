@@ -57,7 +57,7 @@ class FileService
             $pdf->AddPage();
 
             $pdf->SetFont('Times', 'B', 70);
-            $pdf->SetTextColor(192, 192, 192);
+            $pdf->SetTextColor(230, 230, 230);
             $watermarkText = 'PA TONDANO';
             FileService::addWatermark(100, 150, $watermarkText, 45, $pdf);
             $pdf->SetXY(25, 25);

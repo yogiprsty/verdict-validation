@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Verdict;
 use App\Services\FileService;
+use App\Services\VerdictsExport;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class VerdictController extends Controller
 {
@@ -16,9 +19,47 @@ class VerdictController extends Controller
         $this->fileService = $fileService;
     }
 
+    public function export(Request $request)
+    {
+        // You can apply the same filters as the search query to fetch the currently displayed data
+        $query = Verdict::query();
+
+        if ($request->has('search')) {
+            $searchTerm = $request->input('search');
+            $query->where('litigant', 'like', "%{$searchTerm}%")
+                ->orWhere('defendant', 'like', "%{$searchTerm}%");
+        }
+
+        $verdicts = $query->orderBy('created_at', 'desc')->get(); // Get the data as per the current filters
+
+        $filename = 'displayed_data_perkara_' . Carbon::now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new VerdictsExport($verdicts), $filename);
+    }
+
+    public function exportAll()
+    {
+        $verdicts = Verdict::orderBy('created_at', 'desc')->get();
+
+        $filename = 'all_data_perkara_' . Carbon::now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new VerdictsExport($verdicts), $filename);
+    }
+
+
     public function index(Request $request)
     {
-        $verdicts = Verdict::paginate(10);
+        $search = $request->input('search');
+
+        // Query the database based on the search term in multiple columns
+        $verdicts = Verdict::when($search, function ($query, $search) {
+            return $query->where(function ($query) use ($search) {
+                $query->where('litigant', 'LIKE', "%{$search}%")
+                    ->orWhere('defendant', 'LIKE', "%{$search}%");
+            });
+        })
+        ->orderBy('created_at', 'desc') 
+        ->paginate(10);
 
         // Return the paginated data to the view
         return view('verdicts.index', compact('verdicts'));

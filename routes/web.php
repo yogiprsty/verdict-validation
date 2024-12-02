@@ -26,6 +26,8 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('verdicts/export', [VerdictController::class, 'export'])->name('verdicts.export');
+    Route::get('verdicts/export-all', [VerdictController::class, 'exportAll'])->name('verdicts.exportAll');
     Route::resource('verdicts', VerdictController::class);
 });
 
